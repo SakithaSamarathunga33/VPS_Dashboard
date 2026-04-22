@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   vps-agent:
@@ -13,8 +13,8 @@ services:
     volumes:
       - ./data:/data
       - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - "127.0.0.1:4000:4000"
+    networks:
+      - caddy_net
 
   vps-dashboard:
     build: .
@@ -23,7 +23,13 @@ services:
     environment:
       NEXT_PUBLIC_AGENT_URL: http://vps-agent:4000
       NEXT_PUBLIC_AGENT_TOKEN: ${AGENT_TOKEN}
-    ports:
-      - "127.0.0.1:3002:3000"
+    expose:
+      - "3000"
     depends_on:
       - vps-agent
+    networks:
+      - caddy_net
+
+networks:
+  caddy_net:
+    external: true
