@@ -1,15 +1,16 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   Container,
   LayoutDashboard,
   ScrollText,
-  Server,
   Activity,
 } from "lucide-react"
 
+import logo from "@/app/images/VPS_Monitor.png"
 import { cn } from "@/lib/utils"
 import { useSystemStats } from "@/hooks/useSystemStats"
 
@@ -31,9 +32,11 @@ export function Sidebar() {
       aria-label="Sidebar"
     >
       <div className="flex h-14 items-center gap-2 border-b border-vps-border px-2 xl:px-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-vps-border/60">
-          <Server className="size-4 text-vps-green" />
-        </div>
+        <Image
+          src={logo}
+          alt="VPS Monitor"
+          className="size-9 shrink-0 rounded-lg object-cover"
+        />
         <div className="hidden min-w-0 flex-1 xl:block">
           <p className="truncate font-semibold text-vps-text">VPS Monitor</p>
           <p className="text-[10px] text-vps-muted">Docker</p>

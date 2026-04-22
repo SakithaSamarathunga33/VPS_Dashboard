@@ -1,6 +1,8 @@
 # 🖥️ VPS Dashboard
 
 <div align="center">
+  <img src="app/images/VPS_Monitor.png" alt="VPS Monitor Logo" width="400" />
+  <br /><br />
   <img src="https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000" />
   <img src="https://img.shields.io/badge/license-MIT-yellow.svg" />
   <img src="https://img.shields.io/badge/next.js-14.2-black.svg" />
@@ -15,7 +17,7 @@
 </div>
 
 <p align="center">
-  <img src="app/images/UI home.png" alt="VPS Dashboard Preview" width="1200" />
+  <img src="app/images/home.png" alt="VPS Dashboard Preview" width="1200" />
 </p>
 
 ## 📋 Overview
@@ -26,16 +28,16 @@ A self-hosted, real-time **VPS monitoring dashboard** built with **Next.js 14 Ap
 
 ### 📊 System Monitoring
 - **Host CPU** — real-time usage with core count and processor model
-- **System RAM** — used / total with color-coded progress bar
+- **System RAM** — used / total with color-coded progress bar (excludes page cache)
 - **Root Filesystem** — disk usage and free space at a glance
 - **Uptime** — system uptime displayed in the header
 
 ### 🐳 Container Management
-- **Live container list** with status badges (Running / Stopped / Paused)
+- **Live container list** — one container per row with all stats inline
 - **Per-container stats** — CPU %, memory usage, network I/O, disk I/O
 - **Start / Stop / Restart** actions with optimistic UI updates
-- **Port mappings** shown inline on each card
-- **Uptime history** — scrollable tick bar (last 90 polls) with tooltip timestamps
+- **Port mappings** shown inline (deduplicated IPv4/IPv6 entries)
+- **Uptime history** — tick bar (last 90 polls) clipped to available width
 - **30-day daily uptime blocks** — green / yellow / red based on uptime %
 - **Container detail page** — full logs viewer, live stats, and uptime breakdown
 
@@ -47,7 +49,7 @@ A self-hosted, real-time **VPS monitoring dashboard** built with **Next.js 14 Ap
 ### 🎨 Design & UX
 - **Dark-first UI** using a custom VPS color palette
 - **Responsive** — works on desktop, tablet, and mobile
-- **Skeleton loaders** and animated fade-in cards
+- **Skeleton loaders** and animated fade-in rows
 - **Pulse glow** on running container indicators
 - **Caddy reverse proxy** ready — ships with `caddy_net` Docker network support
 
@@ -69,6 +71,7 @@ A self-hosted, real-time **VPS monitoring dashboard** built with **Next.js 14 Ap
 ```
 VPS_Dashboard/
 ├── app/                          # Next.js App Router
+│   ├── icon.png                  # Favicon (auto-detected by Next.js)
 │   ├── layout.tsx                # Root layout + providers
 │   ├── page.tsx                  # Redirects to /dashboard
 │   ├── dashboard/                # Main dashboard page
@@ -81,8 +84,8 @@ VPS_Dashboard/
 │   ├── dashboard/
 │   │   ├── DashboardView.tsx     # Top-level dashboard layout
 │   │   ├── SystemOverview.tsx    # CPU / RAM / Disk stat cards
-│   │   ├── ContainerGrid.tsx     # Responsive container card grid
-│   │   ├── ContainerCard.tsx     # Individual container card
+│   │   ├── ContainerGrid.tsx     # Container list with header row
+│   │   ├── ContainerCard.tsx     # Single-row container entry
 │   │   ├── UptimeBlocks.tsx      # Uptime tick bar + daily blocks
 │   │   └── StatSparkline.tsx     # Mini sparkline chart
 │   ├── layout/
@@ -97,7 +100,7 @@ VPS_Dashboard/
 ├── hooks/                        # SWR data hooks
 ├── types/                        # Shared TypeScript types
 ├── vps-agent/                    # Standalone Node.js monitoring agent
-│   ├── index.js                  # Express server + Docker polling
+│   ├── agent.js                  # Express server + Docker polling
 │   └── Dockerfile
 ├── docker-compose.yml
 └── Dockerfile
@@ -106,12 +109,12 @@ VPS_Dashboard/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Docker & Docker Compose installed on your VPS
-- Caddy (or any reverse proxy) with a `caddy_net` Docker network
+- A Linux VPS with Docker & Docker Compose installed
+- Caddy (or any reverse proxy) configured with a `caddy_net` Docker network
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/SakithaSamarathunga33/VPS_Dashboard.git
+git clone https://github.com/your-username/VPS_Dashboard.git
 cd VPS_Dashboard
 ```
 
@@ -131,7 +134,14 @@ mkdir -p data
 docker compose up -d --build
 ```
 
-The dashboard will be available on port `3002` (or via your Caddy domain).
+The dashboard will be available on port `3002` (or via your reverse proxy domain).
+
+### Example Caddy configuration
+```caddy
+monitor.yourdomain.com {
+    reverse_proxy vps-dashboard:3000
+}
+```
 
 ## ⚙️ Configuration
 
@@ -148,25 +158,27 @@ The dashboard will be available on port `3002` (or via your Caddy domain).
 The repo includes a GitHub Actions workflow that SSHs into your VPS on every push to `main`, pulls the latest code, rebuilds containers, and prunes old images automatically.
 
 ```yaml
-cd /root/VPS_Dashboard
-git pull origin main
-echo "AGENT_TOKEN=${{ secrets.AGENT_TOKEN }}" > .env
-mkdir -p data
-docker compose down
-docker compose up -d --build
-docker image prune -f
+- name: Deploy
+  run: |
+    cd /root/VPS_Dashboard
+    git pull origin main
+    echo "AGENT_TOKEN=${{ secrets.AGENT_TOKEN }}" > .env
+    mkdir -p data
+    docker compose down
+    docker compose up -d --build
+    docker image prune -f
 ```
 
-Set `AGENT_TOKEN` and your SSH credentials as GitHub repository secrets.
+Set `AGENT_TOKEN`, `SSH_HOST`, `SSH_USER`, and `SSH_KEY` as GitHub repository secrets.
 
 ## 🖥️ Key Pages
 
 ### 🏠 Dashboard
 - System resource overview (CPU, RAM, Disk)
-- Full container grid with live stats, uptime bars, and action buttons
+- Full container list with live stats, uptime bars, and action buttons — one container per row
 
 ### 📦 Containers
-- Filterable container list with status, image, and port details
+- Same row-based list with status, image, and port details
 
 ### 📄 Container Detail
 - Live-tailing logs with configurable tail length
@@ -190,10 +202,8 @@ This project is licensed under the MIT License.
 
 ## 📞 Contact
 
-Sakitha Samarathunga — [sakithaudarashmika63@gmail.com](mailto:sakithaudarashmika63@gmail.com)
-
-GitHub: [https://github.com/SakithaSamarathunga33](https://github.com/SakithaSamarathunga33)
+GitHub: [https://github.com/your-username/VPS_Dashboard](https://github.com/your-username/VPS_Dashboard)
 
 ---
 
-<p align="center">Built with ❤️ by Sakitha Samarathunga</p>
+<p align="center">Built with ❤️ by the VPS Dashboard contributors</p>
