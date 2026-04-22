@@ -7,11 +7,6 @@ import { Download, HardDrive } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { ContainerActions } from "@/components/container/ContainerActions"
 import { UptimeBlocks } from "@/components/dashboard/UptimeBlocks"
 import { StatusBadge } from "@/components/dashboard/StatusBadge"
