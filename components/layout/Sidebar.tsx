@@ -10,7 +10,6 @@ import {
   Activity,
 } from "lucide-react"
 
-import logo from "@/app/images/VPS_Monitor.png"
 import { cn } from "@/lib/utils"
 import { useSystemStats } from "@/hooks/useSystemStats"
 
@@ -33,8 +32,10 @@ export function Sidebar() {
     >
       <div className="flex h-14 items-center gap-2 border-b border-vps-border px-2 xl:px-3">
         <Image
-          src={logo}
+          src="/logo.png"
           alt="VPS Monitor"
+          width={36}
+          height={36}
           className="size-9 shrink-0 rounded-lg object-cover"
         />
         <div className="hidden min-w-0 flex-1 xl:block">
