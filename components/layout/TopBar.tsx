@@ -4,13 +4,6 @@ import { useEffect, useState } from "react"
 import { Moon, Radio, RefreshCw, Wifi, WifiOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { useSystemStats } from "@/hooks/useSystemStats"
 import { formatUptime, cn } from "@/lib/utils"
 
@@ -139,21 +132,13 @@ export function TopBar() {
             )}
           />
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-vps-border/50"
-            title="Theme"
-          >
-            <Moon className="size-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Appearance</DropdownMenuLabel>
-            <DropdownMenuItem disabled>Dark (default)</DropdownMenuItem>
-            <p className="px-2 pb-1 text-xs text-vps-muted">
-              This dashboard is optimized for a single dark theme.
-            </p>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div
+          className="inline-flex size-8 items-center justify-center rounded-lg"
+          title="Dark mode (only theme)"
+          aria-label="Dark mode"
+        >
+          <Moon className="size-4 text-vps-muted" />
+        </div>
       </div>
     </header>
   )

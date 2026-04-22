@@ -134,28 +134,47 @@ export function ContainerCard({ container, style }: ContainerCardProps) {
             </p>
             <div className="mt-1 flex flex-wrap items-center gap-1">
               <StatusBadge status={status} />
-              {container.ports.slice(0, 3).map((p) => (
-                <Badge
-                  key={`${p.publicPort}-${p.privatePort}`}
-                  variant="outline"
-                  className="h-5 border-vps-border/80 px-1.5 text-[10px] font-normal text-vps-muted"
-                >
-                  {p.ip && p.ip !== "0.0.0.0" ? `${p.ip}:` : "0.0.0.0:"}
-                  {p.publicPort}-&gt;{p.privatePort}/{p.type}
-                </Badge>
-              ))}
+              {(() => {
+                const seen = new Set<string>()
+                const unique = container.ports.filter((p) => {
+                  const key = `${p.publicPort}-${p.privatePort}-${p.type}`
+                  if (seen.has(key)) return false
+                  seen.add(key)
+                  return true
+                })
+                const shown = unique.slice(0, 2)
+                const rest = unique.length - shown.length
+                return (
+                  <>
+                    {shown.map((p) => (
+                      <Badge
+                        key={`${p.publicPort}-${p.privatePort}-${p.type}`}
+                        variant="outline"
+                        className="h-5 border-vps-border/80 px-1.5 text-[10px] font-normal text-vps-muted"
+                      >
+                        {p.publicPort}-&gt;{p.privatePort}/{p.type}
+                      </Badge>
+                    ))}
+                    {rest > 0 && (
+                      <Badge
+                        variant="outline"
+                        className="h-5 border-vps-border/80 px-1.5 text-[10px] font-normal text-vps-muted"
+                      >
+                        +{rest}
+                      </Badge>
+                    )}
+                  </>
+                )
+              })()}
             </div>
           </div>
         </div>
         <div className="space-y-1.5">
-          <div className="flex items-end justify-between gap-2">
+          <div className="flex items-end gap-2">
             <UptimeBlocks
               className="min-w-0 flex-1"
               containerId={container.id}
             />
-            <span className="shrink-0 font-mono text-xs text-vps-muted">
-              {formatPercent(container.uptimePercent, 1)} uptime
-            </span>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-1.5 text-[11px] sm:grid-cols-2">

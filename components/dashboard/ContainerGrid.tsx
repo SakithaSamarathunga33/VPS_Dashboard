@@ -11,7 +11,7 @@ export function ContainerGrid() {
 
   if (isLoading && !containers) {
     return (
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
@@ -49,7 +49,7 @@ export function ContainerGrid() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
       {containers.map((c, i) => (
         <ContainerCard
           key={c.id}
