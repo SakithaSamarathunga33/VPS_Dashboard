@@ -31,12 +31,12 @@ export function UptimeBlocks({
     return (
       <div
         className={cn(
-          "flex min-w-0 flex-1 items-center gap-2 overflow-x-auto",
+          "flex min-w-0 flex-1 items-center gap-2",
           className
         )}
         aria-label="Uptime history"
       >
-        <div className="flex h-7 min-w-0 items-end gap-0.5">
+        <div className="flex h-7 min-w-0 flex-1 items-end gap-0.5 overflow-hidden">
           {loading && history.length === 0
             ? Array.from({ length: 30 }, (_, i) => (
                 <div
@@ -76,12 +76,12 @@ export function UptimeBlocks({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-1 items-center gap-2 overflow-x-auto",
+        "flex min-w-0 flex-1 items-center gap-2",
         className
       )}
       aria-label="Daily uptime"
     >
-      <div className="flex h-7 min-w-0 items-end gap-0.5">
+      <div className="flex h-7 min-w-0 flex-1 items-end gap-0.5 overflow-hidden">
         {loading && dailyBlocks.length === 0
           ? Array.from({ length: 30 }, (_, i) => (
               <div
