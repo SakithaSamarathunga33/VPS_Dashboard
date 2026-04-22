@@ -1,0 +1,21 @@
+{
+  "name": "vps-agent",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "main": "agent.js",
+  "scripts": {
+    "start": "node agent.js",
+    "dev": "nodemon agent.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "dockerode": "^4.0.0",
+    "better-sqlite3": "^9.4.3",
+    "systeminformation": "^5.21.22",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
