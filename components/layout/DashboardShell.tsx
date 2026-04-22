@@ -12,7 +12,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
       <Sidebar />
       <div className="md:pl-14 xl:pl-60">
         <TopBar />
-        <div className="px-3 pb-24 md:px-4 md:pb-6 lg:px-5">{children}</div>
+        <div className="px-3 pt-4 pb-24 md:px-4 md:pt-5 md:pb-6 lg:px-5">{children}</div>
         <MobileNav />
       </div>
     </div>
