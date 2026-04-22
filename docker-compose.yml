@@ -21,8 +21,9 @@ services:
     container_name: vps-dashboard
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_AGENT_URL: http://vps-agent:4000
-      NEXT_PUBLIC_AGENT_TOKEN: ${AGENT_TOKEN}
+      AGENT_URL: http://vps-agent:4000
+      AGENT_TOKEN: ${AGENT_TOKEN}
+      NEXT_PUBLIC_AGENT_URL: /api/agent
     expose:
       - "3000"
     depends_on:

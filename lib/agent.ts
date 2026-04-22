@@ -4,23 +4,13 @@ import type {
   SystemStats,
 } from "@/types/docker"
 
-const DEFAULT_ORIGIN = "http://127.0.0.1:4000"
-
 function getBaseUrl(): string {
-  const raw = process.env.NEXT_PUBLIC_AGENT_URL?.trim() ?? DEFAULT_ORIGIN
+  const raw = process.env.NEXT_PUBLIC_AGENT_URL?.trim() ?? "/api/agent"
   return raw.replace(/\/$/, "")
 }
 
-function getToken(): string {
-  return process.env.NEXT_PUBLIC_AGENT_TOKEN?.trim() ?? ""
-}
-
 function authHeaders(): HeadersInit {
-  const token = getToken()
-  if (!token) {
-    return {}
-  }
-  return { Authorization: `Bearer ${token}` }
+  return {}
 }
 
 export class AgentError extends Error {
@@ -88,7 +78,7 @@ async function requestPostVoid(path: string): Promise<void> {
 }
 
 export function getAgentConfig(): { baseUrl: string; hasToken: boolean } {
-  return { baseUrl: getBaseUrl(), hasToken: Boolean(getToken()) }
+  return { baseUrl: getBaseUrl(), hasToken: false }
 }
 
 export async function fetchSystemStats(): Promise<SystemStats> {
