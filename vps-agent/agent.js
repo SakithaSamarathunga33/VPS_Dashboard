@@ -55,6 +55,10 @@ app.get("/system", async (req, res) => {
     const cpuData = await si.cpu()
     const primaryDisk = fsSize[0] || {}
 
+    // Use total - available (MemAvailable) so buffers/page-cache are not
+    // counted as "used", matching what `free -h` and most Linux tools show.
+    const memUsed = mem.total - (mem.available || mem.free)
+
     res.json({
       cpu: {
         usagePercent: parseFloat(load.currentLoad.toFixed(1)),
@@ -63,9 +67,9 @@ app.get("/system", async (req, res) => {
       },
       memory: {
         total: mem.total,
-        used: mem.used,
-        free: mem.free,
-        usagePercent: parseFloat(((mem.used / mem.total) * 100).toFixed(1)),
+        used: memUsed,
+        free: mem.available || mem.free,
+        usagePercent: parseFloat(((memUsed / mem.total) * 100).toFixed(1)),
       },
       disk: {
         total: primaryDisk.size || 0,
@@ -132,7 +136,11 @@ app.get("/containers/:id/stats", async (req, res) => {
     }
     cpuPercent = parseFloat(Math.min(100, Math.max(0, cpuPercent)).toFixed(2))
 
-    const memUsage = stats.memory_stats.usage || 0
+    // Subtract page cache so the value matches `docker stats` output.
+    // cgroup v1 reports it as "cache", cgroup v2 as "inactive_file".
+    const memStats = stats.memory_stats.stats || {}
+    const pageCache = memStats.inactive_file ?? memStats.cache ?? 0
+    const memUsage = Math.max(0, (stats.memory_stats.usage || 0) - pageCache)
     const memLimit = stats.memory_stats.limit || 1
     const memPercent = parseFloat(
       ((memUsage / memLimit) * 100).toFixed(2)
