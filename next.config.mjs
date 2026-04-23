@@ -1,4 +1,10 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  serverExternalPackages: [
+    'better-sqlite3',
+    'dockerode',
+    'systeminformation',
+  ],
+}
 
-export default nextConfig;
+export default nextConfig
