@@ -1,26 +1,15 @@
-"use client"
+'use client'
 
-import useSWR from "swr"
-
-import type { Container } from "@/types/docker"
-
-async function fetchContainers(): Promise<Container[]> {
-  const res = await fetch("/api/containers", { cache: "no-store" })
-  if (!res.ok) throw new Error(`Failed to fetch containers: ${res.status}`)
-  return res.json() as Promise<Container[]>
-}
+import { useStream } from '@/context/stream-context'
 
 export function useContainers() {
-  const { data, error, isLoading, mutate, isValidating } = useSWR(
-    "containers",
-    fetchContainers,
-    { refreshInterval: 5000, revalidateOnFocus: true }
-  )
+  const { containers, connected, error } = useStream()
+
   return {
-    containers: data,
-    error,
-    isLoading,
-    isValidating,
-    refresh: mutate,
+    containers: containers ?? [],
+    error: !connected && error ? new Error(error) : null,
+    isLoading: containers === null,
+    isValidating: false,
+    refresh: async () => {},
   }
 }

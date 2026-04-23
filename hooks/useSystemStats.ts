@@ -1,26 +1,15 @@
-"use client"
+'use client'
 
-import useSWR from "swr"
-
-import type { SystemStats } from "@/types/docker"
-
-async function fetchSystemStats(): Promise<SystemStats> {
-  const res = await fetch("/api/system", { cache: "no-store" })
-  if (!res.ok) throw new Error(`Failed to fetch system stats: ${res.status}`)
-  return res.json() as Promise<SystemStats>
-}
+import { useStream } from '@/context/stream-context'
 
 export function useSystemStats() {
-  const { data, error, isLoading, mutate, isValidating } = useSWR(
-    "system-stats",
-    fetchSystemStats,
-    { refreshInterval: 5000, revalidateOnFocus: true }
-  )
+  const { system, connected, error } = useStream()
+
   return {
-    stats: data,
-    error,
-    isLoading,
-    isValidating,
-    refresh: mutate,
+    stats: system,
+    error: !connected && error ? new Error(error) : null,
+    isLoading: system === null,
+    isValidating: false,
+    refresh: async () => {},
   }
 }
