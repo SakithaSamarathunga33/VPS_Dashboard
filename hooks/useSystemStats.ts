@@ -2,7 +2,13 @@
 
 import useSWR from "swr"
 
-import { fetchSystemStats } from "@/lib/agent"
+import type { SystemStats } from "@/types/docker"
+
+async function fetchSystemStats(): Promise<SystemStats> {
+  const res = await fetch("/api/system", { cache: "no-store" })
+  if (!res.ok) throw new Error(`Failed to fetch system stats: ${res.status}`)
+  return res.json() as Promise<SystemStats>
+}
 
 export function useSystemStats() {
   const { data, error, isLoading, mutate, isValidating } = useSWR(

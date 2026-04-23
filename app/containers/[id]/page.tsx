@@ -11,8 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatsPanel } from "@/components/container/StatsPanel"
 import { AgentErrorBanner } from "@/components/layout/AgentErrorBanner"
 import { useUptimeStats } from "@/hooks/useUptimeHistory"
-import { fetchContainers } from "@/lib/agent"
 import type { Container } from "@/types/docker"
+
+async function fetchContainers(): Promise<Container[]> {
+  const res = await fetch("/api/containers", { cache: "no-store" })
+  if (!res.ok) throw new Error(`Failed to fetch containers: ${res.status}`)
+  return res.json() as Promise<Container[]>
+}
 
 function IncidentsList({ containerId }: { containerId: string }) {
   const { incidents, isLoading } = useUptimeStats(containerId, 30)

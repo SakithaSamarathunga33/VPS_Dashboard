@@ -2,7 +2,13 @@
 
 import useSWR from "swr"
 
-import { fetchContainers } from "@/lib/agent"
+import type { Container } from "@/types/docker"
+
+async function fetchContainers(): Promise<Container[]> {
+  const res = await fetch("/api/containers", { cache: "no-store" })
+  if (!res.ok) throw new Error(`Failed to fetch containers: ${res.status}`)
+  return res.json() as Promise<Container[]>
+}
 
 export function useContainers() {
   const { data, error, isLoading, mutate, isValidating } = useSWR(

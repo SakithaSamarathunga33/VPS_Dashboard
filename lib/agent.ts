@@ -1,17 +1,4 @@
-import type {
-  Container,
-  ContainerStats,
-  SystemStats,
-} from "@/types/docker"
-
-function getBaseUrl(): string {
-  const raw = process.env.NEXT_PUBLIC_AGENT_URL?.trim() ?? "/api/agent"
-  return raw.replace(/\/$/, "")
-}
-
-function authHeaders(): HeadersInit {
-  return {}
-}
+import type { ContainerStats } from '@/types/docker'
 
 export class AgentError extends Error {
   constructor(
@@ -20,108 +7,58 @@ export class AgentError extends Error {
     public readonly path?: string
   ) {
     super(message)
-    this.name = "AgentError"
+    this.name = 'AgentError'
   }
 }
 
-function buildUrl(path: string): string {
-  const base = getBaseUrl()
-  const p = path.startsWith("/") ? path : `/${path}`
-  return `${base}${p}`
-}
-
-async function requestJson<T>(
-  path: string,
-  init?: RequestInit
-): Promise<T> {
-  const res = await fetch(buildUrl(path), {
+async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const url = `/api${path.startsWith('/') ? path : `/${path}`}`
+  const res = await fetch(url, {
     ...init,
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-      ...authHeaders(),
-      ...init?.headers,
-    },
+    cache: 'no-store',
+    headers: { Accept: 'application/json', ...init?.headers },
   })
   if (!res.ok) {
-    const text = await res.text().catch(() => "")
-    throw new AgentError(
-      text || `Request failed: ${res.status} ${res.statusText}`,
-      res.status,
-      path
-    )
+    const text = await res.text().catch(() => '')
+    throw new AgentError(text || `Request failed: ${res.status} ${res.statusText}`, res.status, path)
   }
   const text = await res.text()
-  if (!text) {
-    return undefined as T
-  }
+  if (!text) return undefined as T
   return JSON.parse(text) as T
 }
 
 async function requestPostVoid(path: string): Promise<void> {
-  const res = await fetch(buildUrl(path), {
-    method: "POST",
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-      ...authHeaders(),
-    },
+  const url = `/api${path.startsWith('/') ? path : `/${path}`}`
+  const res = await fetch(url, {
+    method: 'POST',
+    cache: 'no-store',
+    headers: { Accept: 'application/json' },
   })
   if (!res.ok) {
-    const text = await res.text().catch(() => "")
-    throw new AgentError(
-      text || `Request failed: ${res.status} ${res.statusText}`,
-      res.status,
-      path
-    )
+    const text = await res.text().catch(() => '')
+    throw new AgentError(text || `Request failed: ${res.status} ${res.statusText}`, res.status, path)
   }
 }
 
-export function getAgentConfig(): { baseUrl: string; hasToken: boolean } {
-  return { baseUrl: getBaseUrl(), hasToken: false }
+export async function fetchContainerStats(id: string): Promise<ContainerStats> {
+  return requestJson<ContainerStats>(`/containers/${encodeURIComponent(id)}/stats`)
 }
 
-export async function fetchSystemStats(): Promise<SystemStats> {
-  return requestJson<SystemStats>("/system", { method: "GET" })
-}
-
-export async function fetchContainers(): Promise<Container[]> {
-  return requestJson<Container[]>("/containers", { method: "GET" })
-}
-
-export async function fetchContainerStats(
-  id: string
-): Promise<ContainerStats> {
-  const q = encodeURIComponent(id)
-  return requestJson<ContainerStats>(`/containers/${q}/stats`, {
-    method: "GET",
-  })
-}
-
-export async function fetchContainerLogs(
-  id: string,
-  tail: number
-): Promise<string[]> {
-  const q = encodeURIComponent(id)
+export async function fetchContainerLogs(id: string, tail: number): Promise<string[]> {
   const t = Math.max(1, Math.min(5000, tail))
-  return requestJson<string[]>(`/containers/${q}/logs?tail=${t}`, {
-    method: "GET",
-  })
+  return requestJson<string[]>(`/containers/${encodeURIComponent(id)}/logs?tail=${t}`)
 }
 
 export async function startContainer(id: string): Promise<void> {
-  const q = encodeURIComponent(id)
-  await requestPostVoid(`/containers/${q}/start`)
+  await requestPostVoid(`/containers/${encodeURIComponent(id)}/start`)
 }
 
 export async function stopContainer(id: string): Promise<void> {
-  const q = encodeURIComponent(id)
-  await requestPostVoid(`/containers/${q}/stop`)
+  await requestPostVoid(`/containers/${encodeURIComponent(id)}/stop`)
 }
 
 export async function restartContainer(id: string): Promise<void> {
-  const q = encodeURIComponent(id)
-  await requestPostVoid(`/containers/${q}/restart`)
+  await requestPostVoid(`/containers/${encodeURIComponent(id)}/restart`)
 }
 
 export type UptimeHistoryEntry = {
@@ -145,29 +82,20 @@ export type UptimeIncident = {
 
 export async function fetchUptimeHistory(
   id: string,
-  limit: number = 90
+  limit = 90
 ): Promise<{ history: UptimeHistoryEntry[] }> {
-  const q = encodeURIComponent(id)
   const l = Math.min(500, Math.max(1, limit))
   return requestJson<{ history: UptimeHistoryEntry[] }>(
-    `/containers/${q}/uptime/history?limit=${l}`,
-    { method: "GET" }
+    `/containers/${encodeURIComponent(id)}/uptime/history?limit=${l}`
   )
 }
 
 export async function fetchUptimeStats(
   id: string,
-  days: number = 30
-): Promise<{
-  uptimePercent: number
-  dailyBlocks: UptimeDailyBlock[]
-  incidents: UptimeIncident[]
-}> {
-  const q = encodeURIComponent(id)
+  days = 30
+): Promise<{ uptimePercent: number; dailyBlocks: UptimeDailyBlock[]; incidents: UptimeIncident[] }> {
   const d = Math.min(365, Math.max(1, days))
-  return requestJson<{
-    uptimePercent: number
-    dailyBlocks: UptimeDailyBlock[]
-    incidents: UptimeIncident[]
-  }>(`/containers/${q}/uptime?days=${d}`, { method: "GET" })
+  return requestJson<{ uptimePercent: number; dailyBlocks: UptimeDailyBlock[]; incidents: UptimeIncident[] }>(
+    `/containers/${encodeURIComponent(id)}/uptime?days=${d}`
+  )
 }

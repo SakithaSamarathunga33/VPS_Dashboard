@@ -3,8 +3,6 @@
 import { AlertTriangle, RefreshCw } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { getAgentConfig } from "@/lib/agent"
-
 type AgentErrorBannerProps = {
   onRetry: () => void
   isRetrying?: boolean
@@ -14,7 +12,6 @@ export function AgentErrorBanner({
   onRetry,
   isRetrying,
 }: AgentErrorBannerProps) {
-  const { baseUrl } = getAgentConfig()
   return (
     <div
       className="flex flex-col gap-3 border-b border-vps-border bg-vps-red/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
@@ -25,7 +22,7 @@ export function AgentErrorBanner({
         <div>
           <p className="font-medium">Cannot connect to VPS agent</p>
           <p className="mt-1 break-all font-mono text-xs text-vps-muted">
-            {baseUrl}
+            /api
           </p>
         </div>
       </div>
