@@ -79,7 +79,7 @@ export async function getContainerLogs(id: string, tail: number): Promise<string
   return (logs as Buffer)
     .toString('utf8')
     .split('\n')
-    .map((line: string) => line.replace(/^[\s\S]{8}/, '').trim())
+    .map((line: string) => line.replace(/^[ -]{1,8}/, '').trim())
     .filter((line: string) => line.length > 0)
 }
 
