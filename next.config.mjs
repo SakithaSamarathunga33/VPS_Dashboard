@@ -1,10 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: [
-    'better-sqlite3',
-    'dockerode',
-    'systeminformation',
-  ],
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push(
+        'better-sqlite3',
+        'dockerode',
+        'systeminformation',
+      )
+    }
+    return config
+  },
 }
 
 export default nextConfig
