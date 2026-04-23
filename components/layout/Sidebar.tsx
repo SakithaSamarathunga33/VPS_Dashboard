@@ -32,7 +32,7 @@ export function Sidebar() {
     >
       <div className="flex h-14 items-center gap-2 border-b border-vps-border px-2 xl:px-3">
         <Image
-          src="/logo.png"
+          src="/images/logo.png"
           alt="VPS Monitor"
           width={36}
           height={36}

@@ -14,7 +14,7 @@ export function useContainerStats(id: string | undefined) {
   const { data, error, isLoading, mutate, isValidating } = useSWR(
     id ? ["container-stats", id] : null,
     () => fetchContainerStats(id as string),
-    { refreshInterval: 3000, revalidateOnFocus: true }
+    { refreshInterval: 1000, revalidateOnFocus: true }
   )
 
   useEffect(() => {

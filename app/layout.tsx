@@ -21,9 +21,9 @@ export const metadata: Metadata = {
   title: "VPS Monitor",
   description: "Docker and host monitoring dashboard (Uptime Kuma style)",
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
+    icon: "/images/logo.png",
+    shortcut: "/images/logo.png",
+    apple: "/images/logo.png",
   },
 }
 

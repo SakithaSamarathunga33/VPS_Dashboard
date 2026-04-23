@@ -7,52 +7,9 @@ import { Button } from "@/components/ui/button"
 import { useSystemStats } from "@/hooks/useSystemStats"
 import { formatUptime, cn } from "@/lib/utils"
 
-function RefreshRing({ seconds, total }: { seconds: number; total: number }) {
-  const p = Math.max(0, Math.min(100, (seconds / total) * 100))
-  return (
-    <div
-      className="relative size-8"
-      title={`Next auto-refresh in ${seconds}s`}
-      role="img"
-    >
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="font-mono text-[10px] text-vps-muted tabular-nums">
-          {seconds}
-        </span>
-      </div>
-      <svg
-        className="size-8 -rotate-90"
-        viewBox="0 0 36 36"
-        aria-hidden
-      >
-        <path
-          d="M18 2.0845
-            a 15.9155 15.9155 0 0 1 0 31.831
-            a 15.9155 15.9155 0 0 1 0 -31.831"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          className="text-vps-border"
-        />
-        <path
-          d="M18 2.0845
-            a 15.9155 15.9155 0 0 1 0 31.831
-            a 15.9155 15.9155 0 0 1 0 -31.831"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeDasharray={`${p}, 100`}
-          className="text-vps-green"
-        />
-      </svg>
-    </div>
-  )
-}
-
 export function TopBar() {
   const { stats, error, isValidating, refresh } = useSystemStats()
   const [now, setNow] = useState(() => new Date())
-  const [countdown, setCountdown] = useState(5)
 
   const connected = Boolean(stats) && !error
   const hostname = stats?.hostname ?? "—"
@@ -61,17 +18,6 @@ export function TopBar() {
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  useEffect(() => {
-    if (stats) setCountdown(5)
-  }, [stats])
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setCountdown((c) => (c <= 1 ? 5 : c - 1))
-    }, 1000)
     return () => clearInterval(id)
   }, [])
 
@@ -98,9 +44,6 @@ export function TopBar() {
         >
           {now.toLocaleTimeString()}
         </time>
-        <div className="hidden items-center gap-1 lg:flex" aria-label="Next refresh">
-          <RefreshRing seconds={countdown} total={5} />
-        </div>
         <div className="hidden items-center text-vps-muted lg:flex" title="Status">
           {connected ? (
             <Wifi className="size-4 text-vps-green" />
