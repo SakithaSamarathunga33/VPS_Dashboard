@@ -71,7 +71,8 @@ export function getRecentLogs(container_id: string, limit = 90) {
        ORDER BY checked_at DESC
        LIMIT ?`
     )
-    .all(container_id, limit) as { is_up: number; status: string; checked_at: string }[]
+    .all(container_id, limit)
+    .reverse() as { is_up: number; status: string; checked_at: string }[]
 }
 
 export function getUptimePercent(container_id: string, days = 30): number {
