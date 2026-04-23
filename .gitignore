@@ -15,6 +15,11 @@ vps-agent/.env
 # SQLite data folder — stays on VPS only
 data/
 
+# Default uptime DB when DATA_DIR unset (lib/db.ts)
+vps-monitor.db
+vps-monitor.db-shm
+vps-monitor.db-wal
+
 # Logs
 *.log
 npm-debug.log*
