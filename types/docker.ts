@@ -1,3 +1,11 @@
+export interface NetworkInterface {
+  iface: string
+  rx_bytes: number
+  tx_bytes: number
+  rx_sec: number
+  tx_sec: number
+}
+
 export interface SystemStats {
   cpu: {
     usagePercent: number
@@ -15,7 +23,21 @@ export interface SystemStats {
     used: number
     free: number
     usagePercent: number
+    filesystems: Array<{
+      fs: string
+      type: string
+      size: number
+      used: number
+      available: number
+      usagePercent: number
+      mount: string
+    }>
+    io: {
+      read_sec: number
+      write_sec: number
+    }
   }
+  network: NetworkInterface[]
   uptime: number
   hostname: string
   os: string

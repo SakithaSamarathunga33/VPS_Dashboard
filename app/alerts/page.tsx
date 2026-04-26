@@ -3,6 +3,7 @@
 import { useState } from "react"
 
 import { useSystemStats } from "@/hooks/useSystemStats"
+import { useSSLCerts } from "@/hooks/useSSLCerts"
 
 function DashCard({ children }: { children: React.ReactNode }) {
   return (
@@ -49,10 +50,20 @@ const INITIAL_ALERTS: Alert[] = [
   { id: 3, level: "info", metric: "Disk", message: "Disk usage above 60% — monitor closely.", time: "4h ago", ack: true },
 ]
 
+const SSL_STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
+  ok:      { bg: "rgba(142,216,173,0.12)", color: "#8ed8ad", label: "ok" },
+  warning: { bg: "rgba(245,158,11,0.12)",  color: "#f59e0b", label: "expiring" },
+  expired: { bg: "rgba(239,68,68,0.12)",   color: "#ef4444", label: "expired" },
+  error:   { bg: "rgba(107,114,128,0.12)", color: "#8899b0", label: "error" },
+}
+
 export default function AlertsPage() {
   const { stats } = useSystemStats()
   const [alerts, setAlerts] = useState<Alert[]>(INITIAL_ALERTS)
   const [thresholds, setThresholds] = useState({ cpu: 80, ram: 85, disk: 90 })
+  const { certs, loading: sslLoading, addDomain, removeDomain } = useSSLCerts()
+  const [newDomain, setNewDomain] = useState("")
+  const [adding, setAdding] = useState(false)
 
   const cpu = stats?.cpu.usagePercent ?? 0
   const ram = stats?.memory.usagePercent ?? 0
@@ -147,6 +158,131 @@ export default function AlertsPage() {
           </div>
         </DashCard>
       </div>
+
+      {/* SSL Certificates */}
+      <DashCard>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <Label>SSL Certificates</Label>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault()
+              if (!newDomain.trim()) return
+              setAdding(true)
+              await addDomain(newDomain.trim())
+              setNewDomain("")
+              setAdding(false)
+            }}
+            className="flex gap-2"
+          >
+            <input
+              type="text"
+              value={newDomain}
+              onChange={(e) => setNewDomain(e.target.value)}
+              placeholder="example.com"
+              className="rounded-md px-3 py-1.5 font-mono text-[12px] outline-none"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid var(--border)",
+                color: "#f0f4f8",
+                width: 180,
+              }}
+            />
+            <button
+              type="submit"
+              disabled={adding || !newDomain.trim()}
+              className="rounded-md px-3 py-1.5 font-mono text-[12px] font-semibold transition-colors"
+              style={{
+                background: "rgba(74,162,171,0.15)",
+                border: "1px solid rgba(74,162,171,0.3)",
+                color: "#4aa2ab",
+                opacity: adding || !newDomain.trim() ? 0.5 : 1,
+              }}
+            >
+              {adding ? "Checking…" : "Add"}
+            </button>
+          </form>
+        </div>
+
+        <div className="overflow-hidden rounded-lg" style={{ border: "1px solid var(--border)" }}>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse" style={{ minWidth: 480 }}>
+              <thead>
+                <tr>
+                  {["Domain", "Issuer", "Expires", "Days Left", "Status", ""].map((h) => (
+                    <th
+                      key={h}
+                      className="px-3 py-2.5 text-left font-mono text-[11px] font-semibold uppercase tracking-widest"
+                      style={{ opacity: 0.45, borderBottom: "1px solid var(--border)" }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sslLoading && certs.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-3 py-6 text-center font-mono text-sm" style={{ opacity: 0.3 }}>
+                      Checking certificates…
+                    </td>
+                  </tr>
+                ) : certs.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-3 py-6 text-center font-mono text-sm" style={{ opacity: 0.3 }}>
+                      No domains added — enter a domain above to monitor its SSL cert
+                    </td>
+                  </tr>
+                ) : (
+                  certs.map((cert) => {
+                    const s = SSL_STATUS_STYLES[cert.status]
+                    return (
+                      <tr key={cert.domain}>
+                        <td className="px-3 py-2.5" style={{ borderBottom: "1px solid var(--border)", fontSize: 13 }}>
+                          <span className="font-mono font-semibold" style={{ color: "#f0f4f8" }}>{cert.domain}</span>
+                        </td>
+                        <td className="px-3 py-2.5 font-mono text-[12px]" style={{ borderBottom: "1px solid var(--border)", opacity: 0.6 }}>
+                          {cert.issuer}
+                        </td>
+                        <td className="px-3 py-2.5 font-mono text-[12px]" style={{ borderBottom: "1px solid var(--border)", opacity: 0.6 }}>
+                          {cert.validTo}
+                        </td>
+                        <td className="px-3 py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                          <span
+                            className="font-mono text-[13px] font-semibold tabular-nums"
+                            style={{ color: cert.daysRemaining < 0 ? "#ef4444" : cert.daysRemaining < 14 ? "#f59e0b" : "#8ed8ad" }}
+                          >
+                            {cert.daysRemaining >= 0 ? `${cert.daysRemaining}d` : cert.error ?? "—"}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                          <span
+                            className="rounded-full px-2 py-0.5 font-mono text-[11px] font-semibold"
+                            style={{ background: s.bg, color: s.color }}
+                          >
+                            {s.label}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                          <button
+                            onClick={() => void removeDomain(cert.domain)}
+                            className="font-mono text-[11px] transition-opacity hover:opacity-100"
+                            style={{ opacity: 0.35, color: "#ef4444" }}
+                          >
+                            remove
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="mt-2 font-mono text-[11px]" style={{ opacity: 0.3 }}>
+          Certificates refresh every 60s · warning threshold: 14 days
+        </div>
+      </DashCard>
     </div>
   )
 }

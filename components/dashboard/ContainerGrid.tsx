@@ -45,10 +45,11 @@ export function ContainerGrid() {
   if (isLoading && !containers?.length) {
     return (
       <div
-        className="overflow-hidden rounded-xl"
+        className="rounded-xl overflow-hidden"
         style={{ border: "1px solid var(--border)", background: "var(--card)" }}
       >
-        <table className="w-full border-collapse">
+        <div className="overflow-x-auto">
+        <table className="w-full border-collapse" style={{ minWidth: 640 }}>
           <HeaderRow />
           <tbody>
             {Array.from({ length: 4 }).map((_, i) => (
@@ -66,6 +67,7 @@ export function ContainerGrid() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     )
   }
@@ -92,21 +94,23 @@ export function ContainerGrid() {
 
   return (
     <div
-      className="overflow-hidden rounded-xl"
+      className="rounded-xl overflow-hidden"
       style={{ border: "1px solid var(--border)", background: "var(--card)" }}
     >
-      <table className="w-full border-collapse">
-        <HeaderRow />
-        <tbody>
-          {containers.map((c, i) => (
-            <ContainerCard
-              key={c.id}
-              container={c}
-              style={{ "--d": `${i * 40}ms` } as React.CSSProperties}
-            />
-          ))}
-        </tbody>
-      </table>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse" style={{ minWidth: 640 }}>
+          <HeaderRow />
+          <tbody>
+            {containers.map((c, i) => (
+              <ContainerCard
+                key={c.id}
+                container={c}
+                style={{ "--d": `${i * 40}ms` } as React.CSSProperties}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
