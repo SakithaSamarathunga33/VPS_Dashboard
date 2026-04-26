@@ -1,90 +1,112 @@
 "use client"
 
-import { Box, PackageOpen } from "lucide-react"
-
 import { useContainers } from "@/hooks/useContainers"
 import { ContainerCard } from "@/components/dashboard/ContainerCard"
 import { Skeleton } from "@/components/ui/skeleton"
 
+function Th({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <th
+      className={`whitespace-nowrap px-3 py-2.5 text-left font-mono text-[11px] font-semibold uppercase tracking-widest ${className ?? ""}`}
+      style={{ opacity: 0.45, borderBottom: "1px solid var(--border)" }}
+    >
+      {children}
+    </th>
+  )
+}
+
 function HeaderRow() {
   return (
-    <div className="flex min-w-0 items-center gap-3 border-b border-vps-border px-4 py-1.5">
-      <span className="w-44 shrink-0 text-[10px] font-medium uppercase tracking-wide text-vps-muted">
-        Container
-      </span>
-      <span className="w-52 shrink-0 text-[10px] font-medium uppercase tracking-wide text-vps-muted">
-        Status
-      </span>
-      <span className="min-w-0 flex-1 text-[10px] font-medium uppercase tracking-wide text-vps-muted">
-        Uptime
-      </span>
-      <span className="w-20 shrink-0 text-right text-[10px] font-medium uppercase tracking-wide text-vps-muted">
-        CPU
-      </span>
-      <span className="w-36 shrink-0 text-right text-[10px] font-medium uppercase tracking-wide text-vps-muted">
-        Memory
-      </span>
-      <span className="hidden w-36 shrink-0 text-right text-[10px] font-medium uppercase tracking-wide text-vps-muted lg:block">
-        Network
-      </span>
-      <span className="hidden w-28 shrink-0 text-right text-[10px] font-medium uppercase tracking-wide text-vps-muted xl:block">
-        Disk I/O
-      </span>
-      <span className="hidden w-16 shrink-0 sm:block" />
-      <span className="w-20 shrink-0" />
-    </div>
+    <thead>
+      <tr>
+        <Th>Container</Th>
+        <Th>Status</Th>
+        <Th className="hidden lg:table-cell">Uptime (90 checks)</Th>
+        <Th>CPU</Th>
+        <Th>RAM</Th>
+        <Th className="hidden xl:table-cell">Network</Th>
+        <Th className="hidden 2xl:table-cell">Disk I/O</Th>
+        <Th>Ports</Th>
+        <Th>{""}</Th>
+      </tr>
+    </thead>
   )
 }
 
 export function ContainerGrid() {
   const { containers, isLoading, error } = useContainers()
 
-  if (isLoading && !containers) {
+  if (isLoading && !containers?.length) {
     return (
-      <div className="overflow-hidden rounded-xl border border-vps-border bg-vps-card">
-        <HeaderRow />
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 border-b border-vps-border px-4 py-3 last:border-0">
-            <Skeleton className="h-3 w-44" />
-            <Skeleton className="h-3 w-52" />
-            <Skeleton className="h-4 flex-1" />
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-3 w-36" />
-          </div>
-        ))}
+      <div
+        className="overflow-hidden rounded-xl"
+        style={{ border: "1px solid var(--border)", background: "var(--card)" }}
+      >
+        <table className="w-full border-collapse">
+          <HeaderRow />
+          <tbody>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <tr key={i}>
+                {Array.from({ length: 5 }).map((_, j) => (
+                  <td
+                    key={j}
+                    className="px-3 py-3"
+                    style={{ borderBottom: "1px solid var(--border)" }}
+                  >
+                    <Skeleton className="h-3 w-20" />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     )
   }
 
-  if (error && !containers) return null
+  if (error && !containers?.length) return null
 
   if (!containers?.length) {
     return (
-      <div className="flex min-h-[240px] flex-col items-center justify-center rounded-xl border border-dashed border-vps-border bg-vps-card/40 px-4 py-12 text-center">
-        <div className="mb-2 inline-flex size-10 items-center justify-center rounded-full bg-vps-border/50">
-          <Box className="size-5 text-vps-muted" />
-        </div>
-        <p className="text-sm font-medium text-vps-text">No containers found</p>
-        <p className="mt-1 max-w-sm text-xs text-vps-muted">
-          When your agent reports Docker containers, they will show up here.
-        </p>
-        <div className="mt-4 text-vps-muted" aria-hidden>
-          <PackageOpen className="mx-auto size-8 opacity-40" />
+      <div
+        className="flex min-h-[200px] items-center justify-center rounded-xl"
+        style={{ border: "1px dashed var(--border)", background: "var(--card)" }}
+      >
+        <div className="text-center">
+          <p className="text-sm font-medium" style={{ color: "#f0f4f8" }}>
+            No containers found
+          </p>
+          <p className="mt-1 text-xs" style={{ color: "#8899b0" }}>
+            Docker containers will appear here when the agent connects.
+          </p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-vps-border bg-vps-card">
-      <HeaderRow />
-      {containers.map((c, i) => (
-        <ContainerCard
-          key={c.id}
-          container={c}
-          style={{ "--d": `${i * 40}ms` } as React.CSSProperties}
-        />
-      ))}
+    <div
+      className="overflow-hidden rounded-xl"
+      style={{ border: "1px solid var(--border)", background: "var(--card)" }}
+    >
+      <table className="w-full border-collapse">
+        <HeaderRow />
+        <tbody>
+          {containers.map((c, i) => (
+            <ContainerCard
+              key={c.id}
+              container={c}
+              style={{ "--d": `${i * 40}ms` } as React.CSSProperties}
+            />
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

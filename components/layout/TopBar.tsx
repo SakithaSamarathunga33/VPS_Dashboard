@@ -1,87 +1,133 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Moon, Radio, RefreshCw, Wifi, WifiOff } from "lucide-react"
+import { usePathname } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
 import { useSystemStats } from "@/hooks/useSystemStats"
-import { formatUptime, cn } from "@/lib/utils"
+
+const PAGE_TITLES: Record<string, string> = {
+  "/dashboard": "Overview",
+  "/cpu": "CPU & Memory",
+  "/containers": "Docker Containers",
+  "/disk": "Disk & I/O",
+  "/network": "Network Traffic",
+  "/processes": "Processes",
+  "/logs": "Live Logs",
+  "/alerts": "Alerts & Thresholds",
+  "/settings": "Settings",
+}
+
+function MiniBar({ value, color }: { value: number; color: string }) {
+  const pct = Math.min(100, Math.max(0, value))
+  const barColor = pct > 85 ? "#ef4444" : pct > 70 ? "#f59e0b" : color
+  return (
+    <div
+      className="relative overflow-hidden rounded-full"
+      style={{ width: 48, height: 4, background: "rgba(255,255,255,0.08)" }}
+    >
+      <div
+        className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
+        style={{ width: `${pct}%`, background: barColor }}
+      />
+    </div>
+  )
+}
 
 export function TopBar() {
-  const { stats, error, isValidating, refresh } = useSystemStats()
+  const pathname = usePathname()
+  const { stats, error } = useSystemStats()
   const [now, setNow] = useState(() => new Date())
 
   const connected = Boolean(stats) && !error
-  const hostname = stats?.hostname ?? "—"
-  const os = stats?.os ?? "—"
-  const uptime = stats?.uptime
+  const cpu = stats?.cpu.usagePercent ?? 0
+  const ram = stats?.memory.usagePercent ?? 0
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
 
+  const title = PAGE_TITLES[pathname] ?? PAGE_TITLES[Object.keys(PAGE_TITLES).find(k => pathname.startsWith(k)) ?? ""] ?? "VPS Monitor"
+
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-2 border-b border-vps-border bg-vps-bg/80 px-3 backdrop-blur md:px-4">
-      <div className="min-w-0 flex-1">
-        <h1
-          className="truncate text-sm font-semibold text-vps-text"
-          title={hostname}
-        >
-          {hostname}
-        </h1>
-        <p className="truncate text-xs text-vps-muted">
-          {os}
-          {uptime !== undefined ? (
-            <> · Up {formatUptime(uptime)}</>
-          ) : null}
-        </p>
-      </div>
-      <div className="hidden items-center gap-2 sm:flex">
+    <header
+      className="sticky top-0 z-20 flex h-[52px] items-center gap-3 px-6"
+      style={{
+        background: "var(--card)",
+        borderBottom: "1px solid var(--border)",
+      }}
+    >
+      <h1
+        className="text-[15px] font-semibold"
+        style={{ color: "#f0f4f8", letterSpacing: "-0.01em" }}
+      >
+        {title}
+      </h1>
+
+      <div className="ml-auto flex items-center gap-5">
+        {/* CPU mini bar */}
+        {stats && (
+          <>
+            <div className="flex items-center gap-2">
+              <span
+                className="font-mono text-[11px] font-semibold uppercase tracking-widest"
+                style={{ opacity: 0.45, color: "#f0f4f8" }}
+              >
+                CPU
+              </span>
+              <span
+                className="font-mono text-[13px] font-semibold tabular-nums"
+                style={{
+                  color: cpu > 85 ? "#ef4444" : cpu > 70 ? "#f59e0b" : "#4aa2ab",
+                }}
+              >
+                {Math.round(cpu)}%
+              </span>
+              <MiniBar value={cpu} color="#4aa2ab" />
+            </div>
+
+            {/* RAM mini bar */}
+            <div className="flex items-center gap-2">
+              <span
+                className="font-mono text-[11px] font-semibold uppercase tracking-widest"
+                style={{ opacity: 0.45, color: "#f0f4f8" }}
+              >
+                RAM
+              </span>
+              <span
+                className="font-mono text-[13px] font-semibold tabular-nums"
+                style={{
+                  color: ram > 85 ? "#ef4444" : ram > 70 ? "#f59e0b" : "#8ed8ad",
+                }}
+              >
+                {Math.round(ram)}%
+              </span>
+              <MiniBar value={ram} color="#8ed8ad" />
+            </div>
+
+            {/* Divider */}
+            <div style={{ width: 1, height: 16, background: "var(--border)" }} />
+          </>
+        )}
+
+        {/* Clock */}
         <time
-          className="font-mono text-sm tabular-nums text-vps-text"
+          className="font-mono text-[12px] tabular-nums"
+          style={{ opacity: 0.45, color: "#f0f4f8" }}
           dateTime={now.toISOString()}
         >
           {now.toLocaleTimeString()}
         </time>
-        <div className="hidden items-center text-vps-muted lg:flex" title="Status">
-          {connected ? (
-            <Wifi className="size-4 text-vps-green" />
-          ) : (
-            <WifiOff className="size-4 text-vps-red" />
-          )}
-        </div>
-        {isValidating ? (
-          <span className="hidden text-[10px] font-medium text-vps-blue lg:inline">
-            Syncing
-          </span>
-        ) : null}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => void refresh()}
-          title="Refresh now"
-        >
-          <RefreshCw
-            className={cn("size-4", isValidating && "animate-spin text-vps-blue")}
-          />
-        </Button>
-        <div className="hidden items-center gap-1.5 sm:flex" title="Connection">
-          <Radio
-            className={cn(
-              "size-4",
-              connected ? "text-vps-green" : "text-vps-red"
-            )}
-          />
-        </div>
+
+        {/* Connection dot */}
         <div
-          className="inline-flex size-8 items-center justify-center rounded-lg"
-          title="Dark mode (only theme)"
-          aria-label="Dark mode"
-        >
-          <Moon className="size-4 text-vps-muted" />
-        </div>
+          className="size-2 rounded-full"
+          style={{
+            background: connected ? "#8ed8ad" : "#6b7280",
+            boxShadow: connected ? "0 0 6px #8ed8ad80" : "none",
+          }}
+          title={connected ? "Connected" : "Offline"}
+        />
       </div>
     </header>
   )

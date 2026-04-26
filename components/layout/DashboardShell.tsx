@@ -10,9 +10,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
   return (
     <div className="min-h-screen bg-vps-bg text-vps-text">
       <Sidebar />
-      <div className="md:pl-14 xl:pl-60">
+      <div className="md:pl-14 xl:pl-56">
         <TopBar />
-        <div className="px-3 pt-4 pb-24 md:px-4 md:pt-5 md:pb-6 lg:px-5">{children}</div>
+        <div className="px-4 pb-24 pt-7 md:px-7 md:pb-7 lg:px-8">
+          {children}
+        </div>
         <MobileNav />
       </div>
     </div>

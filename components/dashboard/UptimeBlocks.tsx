@@ -50,7 +50,7 @@ export function UptimeBlocks({
                     className="h-7 w-1.5 shrink-0 cursor-pointer rounded-sm outline-none transition-opacity hover:opacity-80"
                     type="button"
                     style={{
-                      backgroundColor: tick.is_up ? "#3fb950" : "#f85149",
+                      backgroundColor: tick.is_up ? "#8ed8ad" : "#ef4444",
                     }}
                   />
                   <TooltipContent side="top" className="max-w-xs text-left text-xs">
@@ -97,10 +97,10 @@ export function UptimeBlocks({
                   style={{
                     backgroundColor:
                       block.uptime_percent >= 99
-                        ? "#3fb950"
+                        ? "#8ed8ad"
                         : block.uptime_percent >= 90
-                          ? "#d29922"
-                          : "#f85149",
+                          ? "#f59e0b"
+                          : "#ef4444",
                   }}
                 />
                 <TooltipContent side="top" className="max-w-xs text-left text-xs">

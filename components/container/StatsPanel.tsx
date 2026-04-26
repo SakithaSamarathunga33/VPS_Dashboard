@@ -151,8 +151,8 @@ export function StatsPanel({ containerId, containerName }: StatsPanelProps) {
                       <Area
                         type="monotone"
                         dataKey="cpu"
-                        stroke="#58a6ff"
-                        fill="#58a6ff"
+                        stroke="#4aa2ab"
+                        fill="#4aa2ab"
                         fillOpacity={0.12}
                         strokeWidth={1.2}
                         isAnimationActive
@@ -200,8 +200,8 @@ export function StatsPanel({ containerId, containerName }: StatsPanelProps) {
                       <Area
                         type="monotone"
                         dataKey="mem"
-                        stroke="#3fb950"
-                        fill="#3fb950"
+                        stroke="#8ed8ad"
+                        fill="#8ed8ad"
                         fillOpacity={0.12}
                         strokeWidth={1.2}
                         isAnimationActive
@@ -247,7 +247,7 @@ export function StatsPanel({ containerId, containerName }: StatsPanelProps) {
                       type="monotone"
                       dataKey="rx"
                       name="RX"
-                      stroke="#3fb950"
+                      stroke="#8ed8ad"
                       dot={false}
                       isAnimationActive
                     />
@@ -255,7 +255,7 @@ export function StatsPanel({ containerId, containerName }: StatsPanelProps) {
                       type="monotone"
                       dataKey="tx"
                       name="TX"
-                      stroke="#58a6ff"
+                      stroke="#4aa2ab"
                       dot={false}
                       isAnimationActive
                     />
@@ -296,13 +296,13 @@ export function StatsPanel({ containerId, containerName }: StatsPanelProps) {
                     <Bar
                       dataKey="read"
                       name="Read"
-                      fill="#d29922"
+                      fill="#f59e0b"
                       isAnimationActive
                     />
                     <Bar
                       dataKey="write"
                       name="Write"
-                      fill="#f85149"
+                      fill="#ef4444"
                       isAnimationActive
                     />
                   </BarChart>
