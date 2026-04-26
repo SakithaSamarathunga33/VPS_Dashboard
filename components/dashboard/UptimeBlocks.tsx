@@ -31,12 +31,12 @@ export function UptimeBlocks({
     return (
       <div
         className={cn(
-          "flex min-w-0 flex-1 items-center gap-2",
+          "flex min-w-0 items-center gap-2",
           className
         )}
         aria-label="Uptime history"
       >
-        <div className="flex h-7 min-w-0 flex-1 items-end gap-0.5 overflow-hidden">
+        <div className="flex h-5 items-end gap-px overflow-hidden" style={{ width: 120 }}>
           {loading && history.length === 0
             ? Array.from({ length: 30 }, (_, i) => (
                 <div
@@ -47,9 +47,10 @@ export function UptimeBlocks({
             : (history.length ? history : []).map((tick, i) => (
                 <Tooltip key={`${i}-${tick.checked_at}`}>
                   <TooltipTrigger
-                    className="h-7 w-1.5 shrink-0 cursor-pointer rounded-sm outline-none transition-opacity hover:opacity-80"
+                    className="h-5 w-px shrink-0 cursor-pointer rounded-sm outline-none transition-opacity hover:opacity-80"
                     type="button"
                     style={{
+                      minWidth: 2,
                       backgroundColor: tick.is_up ? "#8ed8ad" : "#ef4444",
                     }}
                   />
@@ -66,8 +67,8 @@ export function UptimeBlocks({
                 </Tooltip>
               ))}
         </div>
-        <span className="shrink-0 font-mono text-sm tabular-nums text-muted-foreground">
-          {uptimePercent.toFixed(2)}% uptime
+        <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
+          {uptimePercent.toFixed(1)}%
         </span>
       </div>
     )

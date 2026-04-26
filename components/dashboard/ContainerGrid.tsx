@@ -7,14 +7,16 @@ import { Skeleton } from "@/components/ui/skeleton"
 function Th({
   children,
   className,
+  style,
 }: {
   children: React.ReactNode
   className?: string
+  style?: React.CSSProperties
 }) {
   return (
     <th
       className={`whitespace-nowrap px-3 py-2.5 text-left font-mono text-[11px] font-semibold uppercase tracking-widest ${className ?? ""}`}
-      style={{ opacity: 0.45, borderBottom: "1px solid var(--border)" }}
+      style={{ opacity: 0.45, borderBottom: "1px solid var(--border)", ...style }}
     >
       {children}
     </th>
@@ -27,7 +29,7 @@ function HeaderRow() {
       <tr>
         <Th>Container</Th>
         <Th>Status</Th>
-        <Th className="hidden lg:table-cell">Uptime (90 checks)</Th>
+        <Th className="hidden lg:table-cell" style={{ width: 200 }}>Uptime</Th>
         <Th>CPU</Th>
         <Th>RAM</Th>
         <Th className="hidden xl:table-cell">Network</Th>
