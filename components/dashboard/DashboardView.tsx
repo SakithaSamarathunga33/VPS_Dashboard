@@ -73,7 +73,7 @@ const SSL_CERTS = [
 export function DashboardView() {
   const { mutate } = useSWRConfig()
   const { error: sysError, isValidating, stats } = useSystemStats()
-  const { error: cError, containers } = useContainers()
+  const { containers } = useContainers()
 
   const [cpuH, setCpuH] = useState<number[]>([])
   const [memH, setMemH] = useState<number[]>([])

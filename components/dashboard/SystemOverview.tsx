@@ -38,15 +38,50 @@ export function SystemOverview() {
   useEffect(() => {
     if (!stats) return
     setCpuH((h) => [...h, { i: h.length, v: stats.cpu.usagePercent }].slice(-20))
-    setMemH((h) => [
-      ...h,
-      { i: h.length, v: stats.memory.usagePercent },
-    ].slice(-20))
-    setDiskH((h) => [
-      ...h,
-      { i: h.length, v: stats.disk.usagePercent },
-    ].slice(-20))
+    setMemH((h) => [...h, { i: h.length, v: stats.memory.usagePercent }].slice(-20))
+    setDiskH((h) => [...h, { i: h.length, v: stats.disk.usagePercent }].slice(-20))
   }, [stats])
+
+  // Hooks must be called unconditionally — before any early returns
+  const cards = useMemo(
+    () =>
+      stats
+        ? [
+            {
+              key: "cpu",
+              title: "CPU",
+              value: formatPercent(stats.cpu.usagePercent, 1),
+              sub: `${stats.cpu.cores} cores · ${stats.cpu.model}`,
+              percent: stats.cpu.usagePercent,
+              history: cpuH,
+              color: "#58a6ff",
+              hint: "Host CPU",
+            },
+            {
+              key: "mem",
+              title: "Memory",
+              value: formatPercent(stats.memory.usagePercent, 1),
+              sub: `${formatBytes(stats.memory.used)} / ${formatBytes(stats.memory.total)}`,
+              percent: stats.memory.usagePercent,
+              history: memH,
+              color: "#3fb950",
+              hint: "System RAM",
+            },
+            {
+              key: "disk",
+              title: "Disk",
+              value: formatPercent(stats.disk.usagePercent, 1),
+              sub: `${formatBytes(stats.disk.used)} / ${formatBytes(stats.disk.total)} · free ${formatBytes(stats.disk.free)}`,
+              percent: stats.disk.usagePercent,
+              history: diskH,
+              color: "#d29922",
+              hint: "Root filesystem",
+            },
+          ]
+        : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [stats?.cpu.usagePercent, stats?.memory.usagePercent, stats?.disk.usagePercent, cpuH, memH, diskH]
+  )
 
   if (isLoading && !stats) {
     return (
@@ -73,43 +108,6 @@ export function SystemOverview() {
   if (!stats) {
     return null
   }
-
-  const cards = useMemo(
-    () => [
-      {
-        key: "cpu",
-        title: "CPU",
-        value: formatPercent(stats.cpu.usagePercent, 1),
-        sub: `${stats.cpu.cores} cores · ${stats.cpu.model}`,
-        percent: stats.cpu.usagePercent,
-        history: cpuH,
-        color: "#58a6ff",
-        hint: "Host CPU",
-      },
-      {
-        key: "mem",
-        title: "Memory",
-        value: formatPercent(stats.memory.usagePercent, 1),
-        sub: `${formatBytes(stats.memory.used)} / ${formatBytes(stats.memory.total)}`,
-        percent: stats.memory.usagePercent,
-        history: memH,
-        color: "#3fb950",
-        hint: "System RAM",
-      },
-      {
-        key: "disk",
-        title: "Disk",
-        value: formatPercent(stats.disk.usagePercent, 1),
-        sub: `${formatBytes(stats.disk.used)} / ${formatBytes(stats.disk.total)} · free ${formatBytes(stats.disk.free)}`,
-        percent: stats.disk.usagePercent,
-        history: diskH,
-        color: "#d29922",
-        hint: "Root filesystem",
-      },
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [stats.cpu.usagePercent, stats.memory.usagePercent, stats.disk.usagePercent, cpuH, memH, diskH]
-  )
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
