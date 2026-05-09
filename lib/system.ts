@@ -32,14 +32,14 @@ export async function getSystemStats(): Promise<SystemStats> {
   ])
 
   // Slow probes — cached to avoid hammering the OS every tick
-  const [fsSize, netStats, diskIO, cpuData, osInfo, procs, time] = await Promise.all([
+  const [fsSize, netStats, diskIO, cpuData, osInfo, time, procs] = await Promise.all([
     cached('fsSize',   10_000, () => si.fsSize()),          // 10 s
     cached('netStats',  2_000, () => si.networkStats('*')), //  2 s
     cached('diskIO',    2_000, () => si.disksIO()),         //  2 s
     cached('cpuData',  60_000, () => si.cpu()),             // 60 s — model/cores never change
     cached('osInfo',   60_000, () => si.osInfo()),          // 60 s — static
-    cached('procs',     3_000, () => si.processes()),       //  3 s — expensive
     cached('time',      1_000, () => Promise.resolve(si.time())), // 1 s
+    si.processes(),                                          // always fresh — needs delta to compute cpu%
   ])
 
   const primaryDisk = fsSize[0] ?? {}

@@ -1,22 +1,32 @@
-version: '3.8'
-
 services:
+  vps-agent:
+    build: ./vps-agent
+    container_name: vps-agent
+    restart: unless-stopped
+    pid: "host"
+    environment:
+      PORT: 4000
+      AGENT_TOKEN: ${AGENT_TOKEN}
+      POLL_INTERVAL_SECONDS: 30
+      DB_PATH: /data/vps-monitor.db
+    volumes:
+      - ./data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /proc:/host/proc:ro
+    ports:
+      - "127.0.0.1:4000:4000"
+
   vps-dashboard:
     build: .
     container_name: vps-dashboard
     restart: unless-stopped
     environment:
-      POLL_INTERVAL_SECONDS: 30
-      DB_PATH: /data/vps-monitor.db
-      PORT: 3000
+      AGENT_URL: http://vps-agent:4000
+      AGENT_TOKEN: ${AGENT_TOKEN}
+      NEXT_PUBLIC_AGENT_URL: /api/agent
     volumes:
-      - ./data:/data
       - /var/run/docker.sock:/var/run/docker.sock
-    expose:
-      - "3000"
-    networks:
-      - caddy_net
-
-networks:
-  caddy_net:
-    external: true
+    ports:
+      - "127.0.0.1:3002:3000"
+    depends_on:
+      - vps-agent
