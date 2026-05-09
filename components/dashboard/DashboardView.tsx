@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 
 import { useContainers } from "@/hooks/useContainers"
@@ -84,46 +84,35 @@ export function DashboardView() {
     setMemH((h) => [...h, stats.memory.usagePercent].slice(-60))
   }, [stats])
 
-  const showBanner = Boolean((sysError && !stats) || (cError && !containers))
+  const showBanner = Boolean(sysError && !stats)
 
   const cpu = stats?.cpu.usagePercent ?? 0
   const ram = stats?.memory.usagePercent ?? 0
   const disk = stats?.disk.usagePercent ?? 0
 
-  const statCards = [
-    {
-      label: "CPU Usage",
-      val: cpu,
-      unit: "%",
-      data: cpuH,
-      color: "#4aa2ab",
-    },
-    {
-      label: "RAM Usage",
-      val: ram,
-      unit: "%",
-      data: memH,
-      color: "#8ed8ad",
-    },
-    {
-      label: "Disk Used",
-      val: disk,
-      unit: "%",
-      data: null as number[] | null,
-      color: "#1d5d82",
-    },
-    {
-      label: "Uptime",
-      val: null as number | null,
-      unit: "",
-      displayVal: stats ? formatUptime(stats.uptime) : "—",
-      data: null as number[] | null,
-      color: "#8b5cf6",
-    },
-  ]
+  const statCards = useMemo(
+    () => [
+      { label: "CPU Usage",  val: cpu,  unit: "%", data: cpuH, color: "#4aa2ab" },
+      { label: "RAM Usage",  val: ram,  unit: "%", data: memH, color: "#8ed8ad" },
+      { label: "Disk Used",  val: disk, unit: "%", data: null as number[] | null, color: "#1d5d82" },
+      {
+        label: "Uptime",
+        val: null as number | null,
+        unit: "",
+        displayVal: stats ? formatUptime(stats.uptime) : "—",
+        data: null as number[] | null,
+        color: "#8b5cf6",
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cpu, ram, disk, cpuH, memH, stats?.uptime]
+  )
 
-  const runningCount = containers?.filter((c) => c.status === "running").length ?? 0
-  const totalCount = containers?.length ?? 0
+  const runningCount = useMemo(
+    () => containers.filter((c) => c.status === "running").length,
+    [containers]
+  )
+  const totalCount = containers.length
 
   return (
     <div className="space-y-6">

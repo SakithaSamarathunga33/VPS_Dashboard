@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { useSystemStats } from "@/hooks/useSystemStats"
 import { AreaChart, DualAreaChart, DonutChart, HBar } from "@/components/charts"
 import { formatBytes } from "@/lib/utils"
+import type { ProcessInfo } from "@/types/docker"
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
@@ -59,21 +60,50 @@ function DashCard({
   )
 }
 
+function CpuBar({ value }: { value: number }) {
+  const color =
+    value >= 80 ? "#ef4444" : value >= 50 ? "#f59e0b" : value >= 20 ? "#4aa2ab" : "#6b7280"
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className="relative h-1.5 flex-1 overflow-hidden rounded-full"
+        style={{ background: "rgba(255,255,255,0.08)" }}
+      >
+        <div
+          className="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
+          style={{ width: `${Math.min(100, value)}%`, background: color }}
+        />
+      </div>
+      <span className="w-10 text-right font-mono text-[11px] tabular-nums" style={{ color }}>
+        {value.toFixed(1)}%
+      </span>
+    </div>
+  )
+}
+
 export default function CPUPage() {
   const { stats } = useSystemStats()
   const [cpuH, setCpuH] = useState<number[]>([])
   const [memH, setMemH] = useState<number[]>([])
+  const [processes, setProcesses] = useState<ProcessInfo[]>([])
 
   useEffect(() => {
     if (!stats) return
     setCpuH((h) => [...h, stats.cpu.usagePercent].slice(-60))
     setMemH((h) => [...h, stats.memory.usagePercent].slice(-60))
+    setProcesses(stats.processes ?? [])
   }, [stats])
 
   const cpu = stats?.cpu.usagePercent ?? 0
   const ram = stats?.memory.usagePercent ?? 0
-  const avg = cpuH.length > 0 ? cpuH.reduce((a, b) => a + b, 0) / cpuH.length : 0
-  const peak = cpuH.length > 0 ? Math.max(...cpuH) : 0
+  const avg = useMemo(
+    () => (cpuH.length > 0 ? cpuH.reduce((a, b) => a + b, 0) / cpuH.length : 0),
+    [cpuH]
+  )
+  const peak = useMemo(
+    () => (cpuH.length > 0 ? Math.max(...cpuH) : 0),
+    [cpuH]
+  )
 
   const memSegs = stats
     ? [
@@ -205,6 +235,133 @@ export default function CPUPage() {
           </div>
         </DashCard>
       )}
+
+      {/* Real-time top processes */}
+      <DashCard>
+        <div className="mb-3 flex items-center justify-between">
+          <Label>Top Processes — Live CPU Usage</Label>
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-block h-1.5 w-1.5 animate-pulse rounded-full"
+              style={{ background: "#4aa2ab" }}
+            />
+            <span className="font-mono text-[10px]" style={{ opacity: 0.45 }}>
+              LIVE · {processes.length} tasks
+            </span>
+          </div>
+        </div>
+
+        {processes.length === 0 ? (
+          <div
+            className="py-8 text-center font-mono text-[12px]"
+            style={{ opacity: 0.35 }}
+          >
+            Waiting for process data…
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left" style={{ borderCollapse: "collapse" }}>
+              <thead>
+                <tr
+                  className="font-mono text-[10px] font-semibold uppercase tracking-widest"
+                  style={{ opacity: 0.4 }}
+                >
+                  <th className="pb-2 pr-3 text-right" style={{ width: 52 }}>PID</th>
+                  <th className="pb-2 pr-3" style={{ minWidth: 130 }}>Name</th>
+                  <th className="pb-2 pr-3" style={{ minWidth: 180 }}>CPU Usage</th>
+                  <th className="pb-2 pr-3" style={{ minWidth: 140 }}>MEM %</th>
+                  <th className="pb-2 pr-3" style={{ minWidth: 90 }}>User</th>
+                  <th className="pb-2" style={{ minWidth: 50 }}>State</th>
+                </tr>
+              </thead>
+              <tbody>
+                {processes.map((proc, i) => {
+                  const isHot = proc.cpuPercent >= 50
+                  const isWarm = proc.cpuPercent >= 20
+                  const rowBg =
+                    i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent"
+                  return (
+                    <tr
+                      key={proc.pid}
+                      style={{ background: rowBg, transition: "background 0.2s" }}
+                    >
+                      <td
+                        className="py-1.5 pr-3 text-right font-mono text-[11px] tabular-nums"
+                        style={{ opacity: 0.4 }}
+                      >
+                        {proc.pid}
+                      </td>
+                      <td className="py-1.5 pr-3">
+                        <span
+                          className="font-mono text-[12px] font-medium"
+                          style={{
+                            color: isHot
+                              ? "#ef4444"
+                              : isWarm
+                              ? "#f59e0b"
+                              : "#f0f4f8",
+                          }}
+                          title={proc.command}
+                        >
+                          {proc.name}
+                        </span>
+                      </td>
+                      <td className="py-1.5 pr-3" style={{ minWidth: 180 }}>
+                        <CpuBar value={proc.cpuPercent} />
+                      </td>
+                      <td className="py-1.5 pr-3">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="relative h-1.5 w-16 overflow-hidden rounded-full"
+                            style={{ background: "rgba(255,255,255,0.08)" }}
+                          >
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${Math.min(100, proc.memPercent)}%`,
+                                background: "#8ed8ad",
+                              }}
+                            />
+                          </div>
+                          <span
+                            className="w-10 text-right font-mono text-[11px] tabular-nums"
+                            style={{ color: "#8ed8ad" }}
+                          >
+                            {proc.memPercent.toFixed(1)}%
+                          </span>
+                        </div>
+                      </td>
+                      <td
+                        className="py-1.5 pr-3 font-mono text-[11px]"
+                        style={{ opacity: 0.5 }}
+                      >
+                        {proc.user || "—"}
+                      </td>
+                      <td className="py-1.5">
+                        <span
+                          className="rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase"
+                          style={{
+                            background:
+                              proc.state === "running"
+                                ? "rgba(74,162,171,0.15)"
+                                : "rgba(255,255,255,0.06)",
+                            color:
+                              proc.state === "running"
+                                ? "#4aa2ab"
+                                : "rgba(240,244,248,0.4)",
+                          }}
+                        >
+                          {proc.state || "—"}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </DashCard>
     </div>
   )
 }

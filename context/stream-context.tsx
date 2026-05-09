@@ -9,24 +9,30 @@ import {
 } from 'react'
 import type { SystemStats, Container } from '@/types/docker'
 
-interface StreamState {
+// ---------------------------------------------------------------------------
+// Two separate contexts so a containers update never re-renders
+// system-only consumers (TopBar, CPU page, etc.)
+// ---------------------------------------------------------------------------
+
+interface SystemStreamState {
   system: SystemStats | null
-  containers: Container[] | null
   connected: boolean
   error: string | null
 }
 
-const defaultState: StreamState = {
-  system: null,
-  containers: null,
-  connected: false,
-  error: null,
+interface ContainersStreamState {
+  containers: Container[] | null
 }
 
-const StreamContext = createContext<StreamState>(defaultState)
+const defaultSystem: SystemStreamState = { system: null, connected: false, error: null }
+const defaultContainers: ContainersStreamState = { containers: null }
+
+const SystemContext = createContext<SystemStreamState>(defaultSystem)
+const ContainersContext = createContext<ContainersStreamState>(defaultContainers)
 
 export function StreamProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<StreamState>(defaultState)
+  const [sysState, setSysState] = useState<SystemStreamState>(defaultSystem)
+  const [conState, setConState] = useState<ContainersStreamState>(defaultContainers)
   const esRef = useRef<EventSource | null>(null)
 
   useEffect(() => {
@@ -35,15 +41,15 @@ export function StreamProvider({ children }: { children: React.ReactNode }) {
       esRef.current = es
 
       es.onopen = () =>
-        setState((s) => ({ ...s, connected: true, error: null }))
+        setSysState((s) => ({ ...s, connected: true, error: null }))
 
       es.onerror = () =>
-        setState((s) => ({ ...s, connected: false, error: 'Stream disconnected' }))
+        setSysState((s) => ({ ...s, connected: false, error: 'Stream disconnected' }))
 
       es.addEventListener('system', (e) => {
         try {
           const system = JSON.parse(e.data) as SystemStats
-          setState((s) => ({ ...s, system }))
+          setSysState((s) => ({ ...s, system }))
         } catch {
           // ignore malformed frame
         }
@@ -52,7 +58,7 @@ export function StreamProvider({ children }: { children: React.ReactNode }) {
       es.addEventListener('containers', (e) => {
         try {
           const containers = JSON.parse(e.data) as Container[]
-          setState((s) => ({ ...s, containers }))
+          setConState({ containers })
         } catch {
           // ignore malformed frame
         }
@@ -66,12 +72,18 @@ export function StreamProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <StreamContext.Provider value={state}>
-      {children}
-    </StreamContext.Provider>
+    <SystemContext.Provider value={sysState}>
+      <ContainersContext.Provider value={conState}>
+        {children}
+      </ContainersContext.Provider>
+    </SystemContext.Provider>
   )
 }
 
-export function useStream(): StreamState {
-  return useContext(StreamContext)
+export function useSystemStream(): SystemStreamState {
+  return useContext(SystemContext)
+}
+
+export function useContainersStream(): ContainersStreamState {
+  return useContext(ContainersContext)
 }

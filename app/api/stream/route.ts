@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       }
 
       await push()
-      const interval = setInterval(() => void push(), 1000)
+      const interval = setInterval(() => void push(), 2000)
 
       request.signal.addEventListener('abort', () => {
         clearInterval(interval)

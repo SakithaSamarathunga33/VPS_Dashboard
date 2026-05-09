@@ -1,3 +1,13 @@
+export interface ProcessInfo {
+  pid: number
+  name: string
+  cpuPercent: number
+  memPercent: number
+  user: string
+  state: string
+  command: string
+}
+
 export interface NetworkInterface {
   iface: string
   rx_bytes: number
@@ -41,6 +51,7 @@ export interface SystemStats {
   uptime: number
   hostname: string
   os: string
+  processes: ProcessInfo[]
 }
 
 export interface Container {

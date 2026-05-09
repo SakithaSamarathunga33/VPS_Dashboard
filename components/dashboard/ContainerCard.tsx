@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -65,19 +65,22 @@ export function ContainerCard({ container, style }: ContainerCardProps) {
     void router.push(href)
   }
 
-  const seen = new Set<string>()
-  const uniquePorts = container.ports.filter((p) => {
-    const key = `${p.publicPort}-${p.privatePort}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
-  const portStr =
-    uniquePorts
-      .slice(0, 2)
-      .map((p) => p.publicPort || p.privatePort)
-      .filter(Boolean)
-      .join(", ") || "—"
+  const portStr = useMemo(() => {
+    const seen = new Set<string>()
+    return (
+      container.ports
+        .filter((p) => {
+          const key = `${p.publicPort}-${p.privatePort}`
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+        .slice(0, 2)
+        .map((p) => p.publicPort || p.privatePort)
+        .filter(Boolean)
+        .join(", ") || "—"
+    )
+  }, [container.ports])
 
   return (
     <tr

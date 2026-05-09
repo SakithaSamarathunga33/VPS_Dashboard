@@ -1,9 +1,9 @@
 'use client'
 
-import { useStream } from '@/context/stream-context'
+import { useSystemStream } from '@/context/stream-context'
 
 export function useSystemStats() {
-  const { system, connected, error } = useStream()
+  const { system, connected, error } = useSystemStream()
 
   return {
     stats: system,

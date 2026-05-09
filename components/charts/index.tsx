@@ -1,7 +1,10 @@
 "use client"
 
-import { useMemo } from "react"
+import { memo, useMemo } from "react"
 
+// ---------------------------------------------------------------------------
+// Shared path builder
+// ---------------------------------------------------------------------------
 function buildPath(data: number[], w: number, h: number, pad = 4): string {
   if (!data || data.length < 2) return ""
   const min = Math.min(...data)
@@ -17,7 +20,16 @@ function buildPath(data: number[], w: number, h: number, pad = 4): string {
   return d
 }
 
-export function AreaChart({
+// Stable gradient IDs — one per component instance, never re-generated
+let _gradId = 0
+function useGradId() {
+  return useMemo(() => `g${++_gradId}`, [])
+}
+
+// ---------------------------------------------------------------------------
+// AreaChart
+// ---------------------------------------------------------------------------
+export const AreaChart = memo(function AreaChart({
   data = [],
   color = "#4aa2ab",
   height = 80,
@@ -26,22 +38,23 @@ export function AreaChart({
   color?: string
   height?: number
 }) {
-  const id = useMemo(() => "grad-" + Math.random().toString(36).slice(2), [])
+  const id = useGradId()
   const w = 300
   const h = height
-  const linePath = buildPath(data, w, h)
-  const areaPath = linePath ? linePath + ` L${w},${h} L0,${h} Z` : ""
 
-  const lastDot = useMemo(() => {
-    if (data.length < 2) return null
-    const min = Math.min(...data)
-    const max = Math.max(...data)
-    const range = max - min || 1
-    const last = data[data.length - 1]
-    const x = w
-    const y = h - 4 - ((last - min) / range) * (h - 8)
-    return { x, y }
-  }, [data, w, h])
+  const { linePath, areaPath, lastDot } = useMemo(() => {
+    const line = buildPath(data, w, h)
+    const area = line ? line + ` L${w},${h} L0,${h} Z` : ""
+    let dot: { x: number; y: number } | null = null
+    if (data.length >= 2) {
+      const min = Math.min(...data)
+      const max = Math.max(...data)
+      const range = max - min || 1
+      const last = data[data.length - 1]
+      dot = { x: w, y: h - 4 - ((last - min) / range) * (h - 8) }
+    }
+    return { linePath: line, areaPath: area, lastDot: dot }
+  }, [data, h])
 
   return (
     <div style={{ position: "relative", width: "100%" }}>
@@ -83,9 +96,12 @@ export function AreaChart({
       </svg>
     </div>
   )
-}
+})
 
-export function DualAreaChart({
+// ---------------------------------------------------------------------------
+// DualAreaChart
+// ---------------------------------------------------------------------------
+export const DualAreaChart = memo(function DualAreaChart({
   dataA = [],
   dataB = [],
   colorA = "#4aa2ab",
@@ -98,30 +114,41 @@ export function DualAreaChart({
   colorB?: string
   height?: number
 }) {
-  const idA = useMemo(() => "ga-" + Math.random().toString(36).slice(2), [])
-  const idB = useMemo(() => "gb-" + Math.random().toString(36).slice(2), [])
+  const idA = useGradId()
+  const idB = useGradId()
   const w = 300
   const h = height
-  const all = [...dataA, ...dataB]
-  const min = Math.min(...all)
-  const max = Math.max(...all) || 1
-  const xs = dataA.map((_, i) => (i / (dataA.length - 1)) * w)
-  const yA = dataA.map((v) => h - 4 - ((v - min) / (max - min || 1)) * (h - 8))
-  const yB = dataB.map((v) => h - 4 - ((v - min) / (max - min || 1)) * (h - 8))
 
-  function makeD(xArr: number[], yArr: number[]) {
-    let d = `M${xArr[0]},${yArr[0]}`
-    for (let i = 1; i < xArr.length; i++) {
-      const cx = (xArr[i - 1] + xArr[i]) / 2
-      d += ` C${cx},${yArr[i - 1]} ${cx},${yArr[i]} ${xArr[i]},${yArr[i]}`
+  const { lineA, lineB, areaA, areaB } = useMemo(() => {
+    const all = [...dataA, ...dataB]
+    if (all.length === 0) return { lineA: "", lineB: "", areaA: "", areaB: "" }
+    const min = Math.min(...all)
+    const max = Math.max(...all) || 1
+    const xs = dataA.map((_, i) =>
+      dataA.length > 1 ? (i / (dataA.length - 1)) * w : w / 2
+    )
+    const yA = dataA.map((v) => h - 4 - ((v - min) / (max - min || 1)) * (h - 8))
+    const yB = dataB.map((v) => h - 4 - ((v - min) / (max - min || 1)) * (h - 8))
+
+    function makeD(xArr: number[], yArr: number[]) {
+      if (xArr.length < 2) return ""
+      let d = `M${xArr[0]},${yArr[0]}`
+      for (let i = 1; i < xArr.length; i++) {
+        const cx = (xArr[i - 1] + xArr[i]) / 2
+        d += ` C${cx},${yArr[i - 1]} ${cx},${yArr[i]} ${xArr[i]},${yArr[i]}`
+      }
+      return d
     }
-    return d
-  }
 
-  const lineA = makeD(xs, yA)
-  const lineB = makeD(xs, yB)
-  const areaA = lineA + ` L${w},${h} L0,${h} Z`
-  const areaB = lineB + ` L${w},${h} L0,${h} Z`
+    const lA = makeD(xs, yA)
+    const lB = makeD(xs, yB)
+    return {
+      lineA: lA,
+      lineB: lB,
+      areaA: lA ? lA + ` L${w},${h} L0,${h} Z` : "",
+      areaB: lB ? lB + ` L${w},${h} L0,${h} Z` : "",
+    }
+  }, [dataA, dataB, h])
 
   return (
     <svg
@@ -151,15 +178,18 @@ export function DualAreaChart({
           strokeWidth="1"
         />
       ))}
-      <path d={areaB} fill={`url(#${idB})`} />
-      <path d={areaA} fill={`url(#${idA})`} />
-      <path d={lineB} fill="none" stroke={colorB} strokeWidth="1.5" strokeLinecap="round" />
-      <path d={lineA} fill="none" stroke={colorA} strokeWidth="1.5" strokeLinecap="round" />
+      {areaB && <path d={areaB} fill={`url(#${idB})`} />}
+      {areaA && <path d={areaA} fill={`url(#${idA})`} />}
+      {lineB && <path d={lineB} fill="none" stroke={colorB} strokeWidth="1.5" strokeLinecap="round" />}
+      {lineA && <path d={lineA} fill="none" stroke={colorA} strokeWidth="1.5" strokeLinecap="round" />}
     </svg>
   )
-}
+})
 
-export function SparkLine({
+// ---------------------------------------------------------------------------
+// SparkLine
+// ---------------------------------------------------------------------------
+export const SparkLine = memo(function SparkLine({
   data = [],
   color = "#4aa2ab",
   width = 80,
@@ -170,7 +200,7 @@ export function SparkLine({
   width?: number
   height?: number
 }) {
-  const linePath = buildPath(data, width, height, 2)
+  const linePath = useMemo(() => buildPath(data, width, height, 2), [data, width, height])
   return (
     <svg
       width={width}
@@ -181,9 +211,12 @@ export function SparkLine({
       <path d={linePath} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
-}
+})
 
-export function HBar({
+// ---------------------------------------------------------------------------
+// HBar
+// ---------------------------------------------------------------------------
+export const HBar = memo(function HBar({
   value,
   max = 100,
   color = "#4aa2ab",
@@ -211,9 +244,12 @@ export function HBar({
       />
     </div>
   )
-}
+})
 
-export function DonutChart({
+// ---------------------------------------------------------------------------
+// DonutChart — offset accumulated via reduce (no side-effects during render)
+// ---------------------------------------------------------------------------
+export const DonutChart = memo(function DonutChart({
   segments = [],
   size = 140,
   strokeWidth = 18,
@@ -224,10 +260,22 @@ export function DonutChart({
 }) {
   const r = size / 2 - strokeWidth / 2 - 2
   const circ = 2 * Math.PI * r
-  const total = segments.reduce((s, seg) => s + seg.value, 0) || 1
+  const total = useMemo(
+    () => segments.reduce((s, seg) => s + seg.value, 0) || 1,
+    [segments]
+  )
   const cx = size / 2
   const cy = size / 2
-  let offset = 0
+
+  // Pre-compute offsets immutably
+  const arcs = useMemo(() => {
+    let offset = 0
+    return segments.map((seg) => {
+      const start = offset
+      offset += seg.value
+      return { ...seg, startOffset: start }
+    })
+  }, [segments])
 
   return (
     <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
@@ -240,9 +288,9 @@ export function DonutChart({
         strokeOpacity="0.08"
         strokeWidth={strokeWidth}
       />
-      {segments.map((seg, i) => {
+      {arcs.map((seg, i) => {
         const len = (seg.value / total) * circ
-        const el = (
+        return (
           <circle
             key={i}
             cx={cx}
@@ -253,15 +301,13 @@ export function DonutChart({
             strokeWidth={strokeWidth}
             strokeDasharray={`${len - 2} ${circ - len + 2}`}
             style={{
-              strokeDashoffset: -(offset / total) * circ,
+              strokeDashoffset: -(seg.startOffset / total) * circ,
               transition: "stroke-dasharray 0.6s",
             }}
             strokeLinecap="butt"
           />
         )
-        offset += seg.value
-        return el
       })}
     </svg>
   )
-}
+})
