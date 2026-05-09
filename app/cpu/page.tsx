@@ -212,12 +212,12 @@ export default function CPUPage() {
     }
 
     // Prune stale entries
-    for (const [pid, entry] of map.entries()) {
+    for (const [pid, entry] of Array.from(map.entries())) {
       if (now - entry.lastSpikeAt > SPIKE_RETAIN_MS) map.delete(pid)
     }
 
     // Sort: suspicious first, then by peak CPU
-    const sorted = [...map.values()].sort((a, b) => {
+    const sorted = Array.from(map.values()).sort((a, b) => {
       if (a.suspicious !== b.suspicious) return a.suspicious ? -1 : 1
       return b.peakCpu - a.peakCpu
     })
