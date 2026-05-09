@@ -3,7 +3,6 @@ services:
     build: ./vps-agent
     container_name: vps-agent
     restart: unless-stopped
-    pid: "host"
     environment:
       PORT: 4000
       AGENT_TOKEN: ${AGENT_TOKEN}
@@ -12,7 +11,6 @@ services:
     volumes:
       - ./data:/data
       - /var/run/docker.sock:/var/run/docker.sock
-      - /proc:/host/proc:ro
     ports:
       - "127.0.0.1:4000:4000"
 
@@ -20,6 +18,7 @@ services:
     build: .
     container_name: vps-dashboard
     restart: unless-stopped
+    pid: "host"
     environment:
       AGENT_URL: http://vps-agent:4000
       AGENT_TOKEN: ${AGENT_TOKEN}
